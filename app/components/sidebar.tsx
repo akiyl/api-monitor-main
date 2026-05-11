@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-
+import Link from "next/link";
 export default function Sidebar() {
   const pathname = usePathname();
 
@@ -9,14 +9,15 @@ export default function Sidebar() {
     { href: "/dashboard", label: "Dashboard" },
     { href: "/dashboard/projects", label: "Projects" },
     { href: "/dashboard/logs", label: "Logs" },
-    { href: "#", label: "Settings" },
   ];
 
   return (
     <div className="w-64 bg-[#1C1829] text-[#E9E6F2] p-5 flex flex-col border-r border-[#8B8699]/20">
-      <h1 className="text-xl font-bold tracking-tight mb-8">
-        <span className="text-[#A78BFA]">Trace</span>Flow
-      </h1>
+      <Link href="/" className="mb-8">
+        <h1 className="text-xl font-bold tracking-tight mb-8">
+          <span className="text-[#A78BFA]">Trace</span>Flow
+        </h1>
+      </Link>
 
       <nav className="space-y-5 pt-5">
         {links.map((item) => {
