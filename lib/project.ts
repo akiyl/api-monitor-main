@@ -1,4 +1,4 @@
-import type { Project } from "@/app/generated/prisma/client";
+import type { Project } from "../prisma/generated/client";
 import { prisma } from "./prisma";
 
 export type ProjectDTO = {
