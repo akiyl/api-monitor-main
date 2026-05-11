@@ -2,18 +2,22 @@ import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
 import { PrismaClient } from "./prisma/generated/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import fs from "fs";
 import process from "process";
 import { generateApiKey } from "./lib/apiKey";
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg(new Pool({ connectionString: process.env.DATABASE_URL })),
+});
 
 // Load seed data
 let dataRaw = null;
 try {
   dataRaw = JSON.parse(fs.readFileSync("./info.json", "utf8"));
 } catch (err) {
-  console.error("Could not parse info.json:", err.message || err);
+  console.error("Could not parse info.json:", err instanceof Error ? err.message : err);
   process.exit(1);
 }
 const data = Array.isArray(dataRaw) ? dataRaw : [dataRaw];
@@ -58,7 +62,7 @@ async function seed() {
   try {
     await seedProjects();
   } catch (error) {
-    console.error("❌ Error inserting:", error.message || error);
+    console.error("❌ Error inserting:", error instanceof Error ? error.message : error);
     throw error;
   }
 }
