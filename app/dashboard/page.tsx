@@ -11,6 +11,7 @@ export default function ProjectsPage() {
   const [showForm, setShowForm] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [creating, setCreating] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   // (removed stray socket listener that referenced undefined `setLogs`)
   useEffect(() => {
     fetchProjects();
@@ -172,14 +173,24 @@ export default function ProjectsPage() {
                 </a>
 
                 <button
-                  onClick={() => {
-                    const toCopy = project.apiKey ?? "";
-                    if (toCopy) navigator.clipboard.writeText(toCopy);
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`/api/projects/${project.id}`);
+                      if (!res.ok) return;
+                      const data = await res.json();
+                      const key = data.apiKey;
+                      if (key) {
+                        await navigator.clipboard.writeText(key);
+                        setCopiedId(project.id);
+                        setTimeout(() => setCopiedId(null), 2000);
+                      }
+                    } catch {
+                      // silent
+                    }
                   }}
-                  disabled={!project.apiKey}
-                  className="text-sm text-gray-600 disabled:opacity-50"
+                  className="text-sm text-gray-600"
                 >
-                  Copy Key
+                  {copiedId === project.id ? "Copied!" : "Copy Key"}
                 </button>
               </div>
             </div>

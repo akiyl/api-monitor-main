@@ -3,15 +3,15 @@ import { getProjectById } from "@/lib/project";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     // 🔐 Replace with real auth (Clerk / NextAuth)
     const userId = "user_123";
 
-    const project = await getProjectById(id, { userId });
+    const project = await getProjectById(id, { userId, includeApiKey: true });
 
     if (!project)
       return NextResponse.json({ error: "Not found" }, { status: 404 });

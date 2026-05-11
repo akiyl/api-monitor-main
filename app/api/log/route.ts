@@ -40,17 +40,6 @@ export async function POST(req: Request) {
         { status: 400 },
       );
     }
-    const io = getIO();
-
-    io.emit("new-log", {
-      projectId: project.id,
-      endpoint,
-      status,
-      responseTime,
-      createdAt: new Date(),
-    });
-    // 💾 Save log
-
     // Ensure numeric fields are numbers
     const numericStatus = Number(status);
     const numericResponseTime = Number(responseTime);
@@ -64,6 +53,20 @@ export async function POST(req: Request) {
         responseTime: numericResponseTime,
       },
     });
+
+    // 💾 Emit socket event (non-blocking — don't let it fail the request)
+    try {
+      const io = getIO();
+      io.emit("new-log", {
+        projectId: project.id,
+        endpoint,
+        status,
+        responseTime,
+        createdAt: new Date(),
+      });
+    } catch (socketErr) {
+      console.error("Socket emit failed (non-fatal):", socketErr);
+    }
 
     return NextResponse.json({ success: true, log });
   } catch (error) {

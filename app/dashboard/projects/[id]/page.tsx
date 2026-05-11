@@ -10,12 +10,60 @@ export default function ProjectLogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [filteredLogs, setFilteredLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [apiKey, setApiKey] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendResult, setSendResult] = useState<string | null>(null);
 
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
+    fetchProject();
     fetchLogs();
   }, []);
+
+  const fetchProject = async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.apiKey) setApiKey(data.apiKey);
+      }
+    } catch (err) {
+      console.error("Failed to fetch project:", err);
+    }
+  };
+
+  const sendTestLog = async () => {
+    if (!apiKey) return;
+    setSending(true);
+    setSendResult(null);
+    try {
+      const res = await fetch("/api/log", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          endpoint: "/api/test",
+          method: "POST",
+          status: 200,
+          responseTime: Math.floor(Math.random() * 500) + 50,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSendResult("success");
+        fetchLogs();
+      } else {
+        setSendResult(`error: ${data.error}`);
+      }
+    } catch (err) {
+      setSendResult(`error: ${err instanceof Error ? err.message : "Request failed"}`);
+    } finally {
+      setSending(false);
+    }
+  };
 
   useEffect(() => {
     applyFilter();
@@ -67,7 +115,29 @@ export default function ProjectLogsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl text-black font-bold mb-6">Logs</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl text-black font-bold">Logs</h1>
+        {apiKey && (
+          <div className="flex items-center gap-3">
+            <div className="text-xs text-gray-500">
+              API Key: <code className="ml-1 bg-gray-100 p-1 rounded">{apiKey.slice(0, 20)}...</code>
+            </div>
+            <button
+              onClick={sendTestLog}
+              disabled={sending}
+              className="bg-black text-white px-4 py-2 rounded text-sm"
+            >
+              {sending ? "Sending..." : "Send Test Log"}
+            </button>
+            {sendResult === "success" && (
+              <span className="text-sm text-green-600">✓ Sent</span>
+            )}
+            {sendResult && sendResult !== "success" && (
+              <span className="text-sm text-red-600">{sendResult}</span>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* 🔥 Filters */}
       <div className="flex gap-2 mb-4">
