@@ -13,7 +13,6 @@ export default function ProjectLogsPage() {
   const [apiKey, setApiKey] = useState("");
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState<string | null>(null);
-
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
@@ -68,10 +67,12 @@ export default function ProjectLogsPage() {
   useEffect(() => {
     applyFilter();
   }, [filter, logs]);
+
   useEffect(() => {
     const interval = setInterval(fetchLogs, 5000);
     return () => clearInterval(interval);
   }, []);
+
   const fetchLogs = async () => {
     try {
       const res = await fetch(`/api/logs?projectId=${projectId}`);
@@ -115,38 +116,43 @@ export default function ProjectLogsPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl text-black font-bold">Logs</h1>
-        {apiKey && (
-          <div className="flex items-center gap-3">
-            <div className="text-xs text-gray-500">
-              API Key: <code className="ml-1 bg-gray-100 p-1 rounded">{apiKey.slice(0, 20)}...</code>
-            </div>
-            <button
-              onClick={sendTestLog}
-              disabled={sending}
-              className="bg-black text-white px-4 py-2 rounded text-sm"
-            >
-              {sending ? "Sending..." : "Send Test Log"}
-            </button>
-            {sendResult === "success" && (
-              <span className="text-sm text-green-600">✓ Sent</span>
-            )}
-            {sendResult && sendResult !== "success" && (
-              <span className="text-sm text-red-600">{sendResult}</span>
-            )}
-          </div>
-        )}
+      {/* Header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <h1 className="text-2xl font-bold text-[#E9E6F2]">Logs</h1>
+        <div className="flex items-center gap-3">
+          {apiKey && (
+            <>
+              <div className="text-[10px] font-mono tracking-[0.04em] text-[#8B8699] bg-[#1C1829] px-3 py-1.5 rounded-[6px]">
+                KEY: {apiKey.slice(0, 16)}...
+              </div>
+              <button
+                onClick={sendTestLog}
+                disabled={sending}
+                className="bg-[#A78BFA] text-[#13111C] px-4 py-2 rounded-[10px] text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition"
+              >
+                {sending ? "Sending..." : "Send Test Log"}
+              </button>
+            </>
+          )}
+          {sendResult === "success" && (
+            <span className="text-xs font-mono text-green-400">sent</span>
+          )}
+          {sendResult && sendResult !== "success" && (
+            <span className="text-xs font-mono text-red-400">{sendResult}</span>
+          )}
+        </div>
       </div>
 
-      {/* 🔥 Filters */}
+      {/* Filters */}
       <div className="flex gap-2 mb-4">
         {["all", "errors", "slow"].map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-3 py-1 rounded border ${
-              filter === f ? "bg-black text-white" : "bg-white"
+            className={`px-4 py-1.5 rounded-[10px] text-xs font-mono tracking-[0.04em] transition ${
+              filter === f
+                ? "bg-[#A78BFA] text-[#13111C]"
+                : "bg-[#1C1829] text-[#8B8699] border border-[#8B8699]/20 hover:text-[#E9E6F2]"
             }`}
           >
             {f}
@@ -154,36 +160,53 @@ export default function ProjectLogsPage() {
         ))}
       </div>
 
-      {/* 🔥 Table */}
+      {/* Table */}
       {loading ? (
-        <p>Loading logs...</p>
+        <div className="flex items-center justify-center py-20">
+          <div className="w-6 h-6 border-2 border-[#A78BFA] border-t-transparent rounded-full animate-spin" />
+        </div>
       ) : filteredLogs.length === 0 ? (
-        <div className="bg-white p-6 border rounded">No logs found</div>
+        <div className="bg-[#1C1829] border border-[#8B8699]/20 rounded-[14px] p-8 text-center text-[#8B8699]">
+          No logs found
+        </div>
       ) : (
-        <div className="bg-white border rounded overflow-hidden">
+        <div className="bg-[#1C1829] border border-[#8B8699]/20 rounded-[14px] overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-100 text-left">
-              <tr>
-                <th className="p-3">Endpoint</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Time</th>
-                <th className="p-3">Date</th>
+            <thead>
+              <tr className="border-b border-[#8B8699]/20">
+                <th className="p-3 text-left text-[10px] font-mono tracking-[0.04em] text-[#8B8699] uppercase">
+                  Endpoint
+                </th>
+                <th className="p-3 text-left text-[10px] font-mono tracking-[0.04em] text-[#8B8699] uppercase">
+                  Status
+                </th>
+                <th className="p-3 text-left text-[10px] font-mono tracking-[0.04em] text-[#8B8699] uppercase">
+                  Time
+                </th>
+                <th className="p-3 text-left text-[10px] font-mono tracking-[0.04em] text-[#8B8699] uppercase">
+                  Date
+                </th>
               </tr>
             </thead>
 
             <tbody>
               {filteredLogs.map((log) => (
-                <tr key={log.id} className="border-t hover:bg-gray-50">
-                  <td className="p-3 font-mono">{log.endpoint}</td>
+                <tr
+                  key={log.id}
+                  className="border-b border-[#8B8699]/5 hover:bg-[#13111C]/50 transition"
+                >
+                  <td className="p-3 font-mono text-sm text-[#E9E6F2]">
+                    {log.endpoint}
+                  </td>
 
                   <td className="p-3">
                     <span
-                      className={`px-2 py-1 rounded text-xs ${
+                      className={`font-mono text-xs px-2 py-0.5 rounded-[6px] ${
                         log.status >= 500
-                          ? "bg-red-100 text-red-700"
+                          ? "bg-red-900/40 text-red-400"
                           : log.status >= 400
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
+                            ? "bg-yellow-900/40 text-yellow-400"
+                            : "bg-green-900/40 text-green-400"
                       }`}
                     >
                       {log.status}
@@ -192,17 +215,17 @@ export default function ProjectLogsPage() {
 
                   <td className="p-3">
                     <span
-                      className={
+                      className={`font-mono text-sm ${
                         log.responseTime > 1000
-                          ? "text-red-600 font-semibold"
-                          : ""
-                      }
+                          ? "text-red-400"
+                          : "text-[#E9E6F2]"
+                      }`}
                     >
-                      {log.responseTime} ms
+                      {log.responseTime}ms
                     </span>
                   </td>
 
-                  <td className="p-3 text-gray-500">
+                  <td className="p-3 text-sm text-[#8B8699]">
                     {new Date(log.createdAt).toLocaleString()}
                   </td>
                 </tr>

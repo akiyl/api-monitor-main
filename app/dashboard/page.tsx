@@ -6,13 +6,11 @@ import { socket } from "@/lib/socket";
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // NEW STATE
   const [showForm, setShowForm] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [creating, setCreating] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  // (removed stray socket listener that referenced undefined `setLogs`)
+
   useEffect(() => {
     fetchProjects();
   }, []);
@@ -27,7 +25,6 @@ export default function ProjectsPage() {
         return;
       }
 
-      // Try parse JSON, but guard against HTML/error pages
       const contentType = res.headers.get("content-type") || "";
       if (!contentType.includes("application/json")) {
         const text = await res.text();
@@ -46,7 +43,6 @@ export default function ProjectsPage() {
     }
   };
 
-  // 🔥 CREATE PROJECT FUNCTION
   const createProject = async () => {
     if (!projectName.trim()) return;
 
@@ -63,7 +59,6 @@ export default function ProjectsPage() {
 
       if (!res.ok) {
         const text = await res.text();
-        // If the server returned HTML (error page), log it for debugging
         console.error("/api/projects POST failed:", res.status, text);
         throw new Error("Failed to create project");
       }
@@ -77,10 +72,7 @@ export default function ProjectsPage() {
 
       const data = await res.json();
 
-      // ✅ Add new project to UI instantly
       setProjects((prev) => [data, ...prev]);
-
-      // reset
       setProjectName("");
       setShowForm(false);
     } catch (err) {
@@ -94,39 +86,39 @@ export default function ProjectsPage() {
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-black">Projects</h1>
+        <h1 className="text-2xl font-bold text-[#E9E6F2]">Projects</h1>
 
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-black text-white px-4 py-2 rounded"
+          className="bg-[#A78BFA] text-[#13111C] px-5 py-2 rounded-[10px] text-sm font-semibold hover:opacity-90 transition"
         >
           + New Project
         </button>
       </div>
 
-      {/* 🔥 Create Project Form */}
+      {/* Create Project Form */}
       {showForm && (
-        <div className="mb-6 bg-white text-black p-4 border rounded">
+        <div className="mb-6 bg-[#1C1829] p-6 rounded-[14px] border border-[#8B8699]/20">
           <input
             type="text"
             placeholder="Enter project name"
             value={projectName}
             onChange={(e) => setProjectName(e.target.value)}
-            className="border p-2 w-full mb-3"
+            className="border border-[#8B8699]/20 bg-[#13111C] text-[#E9E6F2] p-3 w-full mb-3 rounded-[10px] placeholder:text-[#8B8699]/60 outline-none focus:border-[#A78BFA] transition"
           />
 
           <div className="flex gap-2">
             <button
               onClick={createProject}
               disabled={creating}
-              className="bg-black text-white px-4 py-2 rounded"
+              className="bg-[#A78BFA] text-[#13111C] px-5 py-2 rounded-[10px] text-sm font-semibold hover:opacity-90 disabled:opacity-50 transition"
             >
               {creating ? "Creating..." : "Create"}
             </button>
 
             <button
               onClick={() => setShowForm(false)}
-              className="border px-4 py-2 rounded"
+              className="border border-[#8B8699]/20 text-[#8B8699] px-5 py-2 rounded-[10px] text-sm hover:text-[#E9E6F2] transition"
             >
               Cancel
             </button>
@@ -136,27 +128,33 @@ export default function ProjectsPage() {
 
       {/* Content */}
       {loading ? (
-        <p>Loading...</p>
+        <div className="flex items-center justify-center py-20">
+          <div className="w-6 h-6 border-2 border-[#A78BFA] border-t-transparent rounded-full animate-spin" />
+        </div>
       ) : projects.length === 0 ? (
-        <div className="text-gray-900 border p-6 rounded bg-white">
-          No projects yet. Create your first one 🚀
+        <div className="bg-[#1C1829] border border-[#8B8699]/20 rounded-[14px] p-8 text-center">
+          <p className="text-[#8B8699]">No projects yet. Create your first one.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {projects.map((project) => (
             <div
               key={project.id}
-              className="bg-white p-4 rounded  text-black border hover:shadow transition"
+              className="bg-[#1C1829] p-6 rounded-[14px] border border-[#8B8699]/20 hover:border-[#8B8699]/40 transition"
             >
-              <h2 className="font-semibold text-lg">{project.name}</h2>
+              <h2 className="font-semibold text-lg text-[#E9E6F2]">
+                {project.name}
+              </h2>
 
-              <p className="text-sm text-gray-500 mt-2">
-                Created: {new Date(project.createdAt).toLocaleDateString()}
+              <p className="text-sm text-[#8B8699] mt-2">
+                Created {new Date(project.createdAt).toLocaleDateString()}
               </p>
 
               <div className="mt-4">
-                <p className="text-xs text-gray-400">API KEY</p>
-                <p className="font-mono text-sm bg-gray-100 p-2 rounded">
+                <p className="text-[10px] font-mono tracking-[0.04em] text-[#8B8699] uppercase">
+                  API Key
+                </p>
+                <p className="font-mono text-sm text-[#E9E6F2] bg-[#13111C] p-2 rounded-[6px] mt-1 truncate">
                   {project.maskedApiKey ??
                     (project.apiKey
                       ? project.apiKey.slice(0, 20) + "..."
@@ -164,12 +162,12 @@ export default function ProjectsPage() {
                 </p>
               </div>
 
-              <div className="mt-4 flex justify-between">
+              <div className="mt-4 flex justify-between items-center">
                 <a
                   href={`/dashboard/projects/${project.id}`}
-                  className="text-sm text-blue-600"
+                  className="text-sm text-[#A78BFA] font-medium hover:underline transition"
                 >
-                  View →
+                  View details →
                 </a>
 
                 <button
@@ -188,9 +186,11 @@ export default function ProjectsPage() {
                       // silent
                     }
                   }}
-                  className="text-sm text-gray-600"
+                  className="text-sm text-[#8B8699] hover:text-[#A78BFA] transition font-mono tracking-[0.04em]"
                 >
-                  {copiedId === project.id ? "Copied!" : "Copy Key"}
+                  <span className={copiedId === project.id ? "text-[#A78BFA]" : ""}>
+                    {copiedId === project.id ? "copied" : "copy key"}
+                  </span>
                 </button>
               </div>
             </div>
